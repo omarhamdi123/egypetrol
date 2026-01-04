@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviation Fuel Calculator</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item {
+            margin-bottom: 10px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #1976d2;
+        }
+
+        small {
+            color: #888;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Aviation Fuel Calculator</h1>
+        <p class="subtitle">Calculate hydrogen content and net heat of combustion using ASTM test methods</p>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('hydrogen')">Hydrogen Content</button>
+            <button class="tab-btn" onclick="switchTab('combustion')">Heat of Combustion</button>
+            <button class="tab-btn" onclick="switchTab('cetane')">Cetane Index</button>
+        </div>
+
+        <!-- Hydrogen Content Tab -->
+        <div id="hydrogen-tab" class="tab-content active">
+            <div class="info">
+                <strong>Hydrogen Content:</strong> Calculate mass percent hydrogen using correlation with fuel properties.
+            </div>
+
+            <form id="hydrogenForm">
+                <div class="form-group">
+                    <label for="eqType">Select Equation</label>
+                    <select id="eqType">
+                        <option value="both">Both Equations</option>
+                        <option value="eq1">Equation 1 Only (Standard Units)</option>
+                        <option value="eq2">Equation 2 Only (SI Units)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="gravityGroup">
+                    <label for="gravity">G - Gravity (°API)</label>
+                    <input type="number" id="gravity" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="aromatics">A - Volume Percent Aromatics (%)</label>
+                    <input type="number" id="aromatics" step="0.01" required>
+                </div>
+
+                <div class="form-group" id="distillationFGroup">
+                    <label for="distillationF">V - Average Distillation (°F)</label>
+                    <input type="number" id="distillationF" step="0.01">
+                    <small>Average of 10%, 50%, and 90% distillation data</small>
+                </div>
+
+                <div class="form-group" id="distillationCGroup">
+                    <label for="distillationC">T - Average Distillation (°C)</label>
+                    <input type="number" id="distillationC" step="0.01">
+                    <small>Average of 10%, 50%, and 90% distillation data</small>
+                </div>
+
+                <div class="form-group" id="densityGroup">
+                    <label for="density">D - Density (kg/m³) at 15°C</label>
+                    <input type="number" id="density" step="0.01">
+                </div>
+
+                <button type="submit">Calculate Hydrogen Content</button>
+            </form>
+
+            <div class="results" id="hydrogenResults">
+                <div class="result-item" id="h1Result">
+                    <div class="result-label">Hydrogen Content (Equation 1 - Standard Units)</div>
+                    <div class="result-value" id="h1Value">-</div>
+                </div>
+                <div class="result-item" id="h2Result">
+                    <div class="result-label">Hydrogen Content (Equation 2 - SI Units)</div>
+                    <div class="result-value" id="h2Value">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heat of Combustion Tab -->
+        <div id="combustion-tab" class="tab-content">
+            <div class="info">
+                <strong>Heat of Combustion:</strong> Calculate net heat of combustion for aviation fuels.
+            </div>
+
+            <form id="combustionForm">
+                <div class="form-group">
+                    <label for="densityComb">ρ - Density at 15°C (kg/m³)</label>
+                    <input type="number" id="densityComb" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="aniline">A - Aniline Point Temperature (°C)</label>
+                    <input type="number" id="aniline" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="aromaticsComb">A - Aromatics Content</label>
+                    <input type="number" id="aromaticsComb" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sulfur">S - Sulfur Content (percent by mass)</label>
+                    <input type="number" id="sulfur" step="0.01" value="0">
+                    <small>Enter 0 if sulfur-free</small>
+                </div>
+
+                <button type="submit">Calculate Heat of Combustion</button>
+            </form>
+
+            <div class="results" id="combustionResults">
+                <div class="result-item">
+                    <div class="result-label">Qp - Net Heat of Combustion (MJ/kg)</div>
+                    <div class="result-value" id="qpValue">-</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Q'p - Corrected for Sulfur (MJ/kg)</div>
+                    <div class="result-value" id="qpCorrectedValue">-</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">qp - Volumetric Heat of Combustion (MJ/L)</div>
+                    <div class="result-value" id="qpVolValue">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cetane Index Tab -->
+        <div id="cetane-tab" class="tab-content">
+            <div class="info">
+                <strong>Cetane Index:</strong> Calculate CCI (Calculated Cetane Index) for diesel fuels.
+            </div>
+
+            <form id="cetaneForm">
+                <div class="form-group">
+                    <label for="cetaneProcedure">Select Procedure</label>
+                    <select id="cetaneProcedure">
+                        <option value="A">Procedure A (Equation 1 - °C)</option>
+                        <option value="B">Procedure B (Equation 3 - °F)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="densityCetane">D - Density at 15°C (g/mL)</label>
+                    <input type="number" id="densityCetane" step="0.0001" required>
+                    <small>Test Methods D1298 or D4052</small>
+                </div>
+
+                <!-- Procedure A Fields (°C) -->
+                <div id="procedureAFields">
+                    <div class="form-group">
+                        <label for="T10C">T₁₀ - 10% Recovery Temperature (°C)</label>
+                        <input type="number" id="T10C" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="T50C">T₅₀ - 50% Recovery Temperature (°C)</label>
+                        <input type="number" id="T50C" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="T90C">T₉₀ - 90% Recovery Temperature (°C)</label>
+                        <input type="number" id="T90C" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+                </div>
+
+                <!-- Procedure B Fields (°F) -->
+                <div id="procedureBFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="T10F">T₁₀ - 10% Recovery Temperature (°F)</label>
+                        <input type="number" id="T10F" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="T50F">T₅₀ - 50% Recovery Temperature (°F)</label>
+                        <input type="number" id="T50F" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="T90F">T₉₀ - 90% Recovery Temperature (°F)</label>
+                        <input type="number" id="T90F" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+                </div>
+
+                <button type="submit">Calculate Cetane Index</button>
+            </form>
+
+            <div class="results" id="cetaneResults">
+                <div class="result-item">
+                    <div class="result-label">CCI - Calculated Cetane Index</div>
+                    <div class="result-value" id="cciValue">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tab + '-tab').classList.add('active');
+
+            // Hide results
+            document.querySelectorAll('.results').forEach(result => result.classList.remove('show'));
+        }
+
+        // Hydrogen Content Calculator
+        document.getElementById('eqType').addEventListener('change', function() {
+            const eqType = this.value;
+            const gravityGroup = document.getElementById('gravityGroup');
+            const distillationFGroup = document.getElementById('distillationFGroup');
+            const distillationCGroup = document.getElementById('distillationCGroup');
+            const densityGroup = document.getElementById('densityGroup');
+            const gravity = document.getElementById('gravity');
+            const distillationF = document.getElementById('distillationF');
+            const distillationC = document.getElementById('distillationC');
+            const density = document.getElementById('density');
+
+            if (eqType === 'eq1') {
+                gravityGroup.style.display = 'block';
+                distillationFGroup.style.display = 'block';
+                distillationCGroup.style.display = 'none';
+                densityGroup.style.display = 'none';
+                gravity.required = true;
+                distillationF.required = true;
+                distillationC.required = false;
+                density.required = false;
+            } else if (eqType === 'eq2') {
+                gravityGroup.style.display = 'none';
+                distillationFGroup.style.display = 'none';
+                distillationCGroup.style.display = 'block';
+                densityGroup.style.display = 'block';
+                gravity.required = false;
+                distillationF.required = false;
+                distillationC.required = true;
+                density.required = true;
+            } else {
+                gravityGroup.style.display = 'block';
+                distillationFGroup.style.display = 'block';
+                distillationCGroup.style.display = 'block';
+                densityGroup.style.display = 'block';
+                gravity.required = true;
+                distillationF.required = true;
+                distillationC.required = true;
+                density.required = true;
+            }
+        });
+
+        document.getElementById('hydrogenForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const eqType = document.getElementById('eqType').value;
+            const G = parseFloat(document.getElementById('gravity').value) || 0;
+            const A = parseFloat(document.getElementById('aromatics').value);
+            const V = parseFloat(document.getElementById('distillationF').value) || 0;
+            const T = parseFloat(document.getElementById('distillationC').value) || 0;
+            const D = parseFloat(document.getElementById('density').value) || 0;
+
+            let H1 = null;
+            if (eqType === 'eq1' || eqType === 'both') {
+                H1 = (0.06317 * G) - (0.041089 * A) + (0.000072135 * A * V) + 
+                     (0.00005684 * G * V) - (0.0004960 * G * A) + 10.56;
+            }
+
+            let H2 = null;
+            if (eqType === 'eq2' || eqType === 'both') {
+                H2 = (9201.2 + 14.49 * T - 70.22 * A) / D + 
+                     0.02652 * A + 0.0001298 * A * T - 0.01347 * T + 2.003;
+            }
+
+            const h1Result = document.getElementById('h1Result');
+            const h2Result = document.getElementById('h2Result');
+
+            if (H1 !== null) {
+                document.getElementById('h1Value').textContent = H1.toFixed(4) + ' %';
+                h1Result.style.display = 'block';
+            } else {
+                h1Result.style.display = 'none';
+            }
+
+            if (H2 !== null) {
+                document.getElementById('h2Value').textContent = H2.toFixed(4) + ' %';
+                h2Result.style.display = 'block';
+            } else {
+                h2Result.style.display = 'none';
+            }
+
+            document.getElementById('hydrogenResults').classList.add('show');
+        });
+
+        // Heat of Combustion Calculator
+        document.getElementById('combustionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const rho = parseFloat(document.getElementById('densityComb').value);
+            const A_aniline = parseFloat(document.getElementById('aniline').value);
+            const A_arom = parseFloat(document.getElementById('aromaticsComb').value);
+            const S = parseFloat(document.getElementById('sulfur').value);
+
+            // Equation 1: Qp calculation
+            const Qp = 22.9596 - 0.0126587 * A_arom + 
+                       26640.9 * (1/rho) + 32.622 * (A_aniline/rho) - 
+                       6.69030e-5 * Math.pow(A_aniline, 2) - 
+                       9217760 * Math.pow(1/rho, 2);
+
+            // Equation 2: Q'p corrected for sulfur
+            const Qp_corrected = Qp - 0.1163 * S;
+
+            // Equation 3: qp volumetric heat
+            const qp = Qp_corrected * rho * 1e-3;
+
+            document.getElementById('qpValue').textContent = Qp.toFixed(4) + ' MJ/kg';
+            document.getElementById('qpCorrectedValue').textContent = Qp_corrected.toFixed(4) + ' MJ/kg';
+            document.getElementById('qpVolValue').textContent = qp.toFixed(4) + ' MJ/L';
+
+            document.getElementById('combustionResults').classList.add('show');
+        });
+
+        // Cetane Index Calculator
+        document.getElementById('cetaneProcedure').addEventListener('change', function() {
+            const procedure = this.value;
+            const procedureAFields = document.getElementById('procedureAFields');
+            const procedureBFields = document.getElementById('procedureBFields');
+            const T10C = document.getElementById('T10C');
+            const T50C = document.getElementById('T50C');
+            const T90C = document.getElementById('T90C');
+            const T10F = document.getElementById('T10F');
+            const T50F = document.getElementById('T50F');
+            const T90F = document.getElementById('T90F');
+
+            if (procedure === 'A') {
+                procedureAFields.style.display = 'block';
+                procedureBFields.style.display = 'none';
+                T10C.required = true;
+                T50C.required = true;
+                T90C.required = true;
+                T10F.required = false;
+                T50F.required = false;
+                T90F.required = false;
+            } else {
+                procedureAFields.style.display = 'none';
+                procedureBFields.style.display = 'block';
+                T10C.required = false;
+                T50C.required = false;
+                T90C.required = false;
+                T10F.required = true;
+                T50F.required = true;
+                T90F.required = true;
+            }
+        });
+
+        document.getElementById('cetaneForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const procedure = document.getElementById('cetaneProcedure').value;
+            const D = parseFloat(document.getElementById('densityCetane').value);
+            let CCI;
+
+            if (procedure === 'A') {
+                // Procedure A - Equation 1 (°C)
+                const T10 = parseFloat(document.getElementById('T10C').value);
+                const T50 = parseFloat(document.getElementById('T50C').value);
+                const T90 = parseFloat(document.getElementById('T90C').value);
+
+                const DN = D - 0.85;
+                const B = (T10 + 2*T50 + T90) / 4 - 215;
+                const T10N = T50 - 215;
+                const T50N = T90 - 260;
+                const T90N = T90 - 310;
+
+                CCI = 45.2 + (0.0892 * T10N) + (0.131 + (0.901*B)) * T50N + (0.0523 - (0.420*B)) * T90N + 
+                      (0.00049 * Math.pow(T10N, 2) - Math.pow(T90N, 2)) + (107*B) + (60 * DN * DN);
+            } else {
+                // Procedure B - Equation 3 (°F)
+                const T10 = parseFloat(document.getElementById('T10F').value);
+                const T50 = parseFloat(document.getElementById('T50F').value);
+                const T90 = parseFloat(document.getElementById('T90F').value);
+
+                CCI = -399.90 * D + 0.06183 * T10 + 0.06733 * T50 + 0.03489 * T90 + 304.09;
+            }
+
+            document.getElementById('cciValue').textContent = CCI.toFixed(2);
+            document.getElementById('cetaneResults').classList.add('show');
+        });
+    </script>
+</body>
+</html>
