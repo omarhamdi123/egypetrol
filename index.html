@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviation Fuel Calculator</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Aviation Fuel Calculator</h1>
+        <p class="subtitle">Calculate hydrogen content and net heat of combustion using ASTM test methods</p>
+
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('hydrogen')">Hydrogen Content</button>
+            <button class="tab-btn" onclick="switchTab('combustion')">Heat of Combustion</button>
+            <button class="tab-btn" onclick="switchTab('cetane')">Cetane Index</button>
+        </div>
+
+        <!-- Hydrogen Content Tab -->
+        <div id="hydrogen-tab" class="tab-content active">
+            <div class="info">
+                <strong>Hydrogen Content:</strong> Calculate mass percent hydrogen using correlation with fuel properties.
+            </div>
+
+            <form id="hydrogenForm">
+                <div class="form-group">
+                    <label for="eqType">Select Equation</label>
+                    <select id="eqType">
+                        <option value="both">Both Equations</option>
+                        <option value="eq1">Equation 1 Only (Standard Units)</option>
+                        <option value="eq2">Equation 2 Only (SI Units)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="gravityGroup">
+                    <label for="gravity">G - Gravity (°API)</label>
+                    <input type="number" id="gravity" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label for="aromatics">A - Volume Percent Aromatics (%)</label>
+                    <input type="number" id="aromatics" step="0.01" required>
+                </div>
+
+                <div class="form-group" id="distillationFGroup">
+                    <label for="distillationF">V - Average Distillation (°F)</label>
+                    <input type="number" id="distillationF" step="0.01">
+                    <small>Average of 10%, 50%, and 90% distillation data</small>
+                </div>
+
+                <div class="form-group" id="distillationCGroup">
+                    <label for="distillationC">T - Average Distillation (°C)</label>
+                    <input type="number" id="distillationC" step="0.01">
+                    <small>Average of 10%, 50%, and 90% distillation data</small>
+                </div>
+
+                <div class="form-group" id="densityGroup">
+                    <label for="density">D - Density (kg/m³) at 15°C</label>
+                    <input type="number" id="density" step="0.01">
+                </div>
+
+                <button type="submit">Calculate Hydrogen Content</button>
+            </form>
+
+            <div class="results" id="hydrogenResults">
+                <div class="result-item" id="h1Result">
+                    <div class="result-label">Hydrogen Content (Equation 1 - Standard Units)</div>
+                    <div class="result-value" id="h1Value">-</div>
+                </div>
+                <div class="result-item" id="h2Result">
+                    <div class="result-label">Hydrogen Content (Equation 2 - SI Units)</div>
+                    <div class="result-value" id="h2Value">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heat of Combustion Tab -->
+        <div id="combustion-tab" class="tab-content">
+            <div class="info">
+                <strong>Heat of Combustion:</strong> Calculate net heat of combustion for aviation fuels.
+            </div>
+
+            <form id="combustionForm">
+                <div class="form-group">
+                    <label for="densityComb">ρ - Density at 15°C (kg/m³)</label>
+                    <input type="number" id="densityComb" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="aniline">A - Aniline Point Temperature (°C)</label>
+                    <input type="number" id="aniline" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="aromaticsComb">A - Aromatics Content</label>
+                    <input type="number" id="aromaticsComb" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sulfur">S - Sulfur Content (percent by mass)</label>
+                    <input type="number" id="sulfur" step="0.01" value="0">
+                    <small>Enter 0 if sulfur-free</small>
+                </div>
+
+                <button type="submit">Calculate Heat of Combustion</button>
+            </form>
+
+            <div class="results" id="combustionResults">
+                <div class="result-item">
+                    <div class="result-label">Qp - Net Heat of Combustion (MJ/kg)</div>
+                    <div class="result-value" id="qpValue">-</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Q'p - Corrected for Sulfur (MJ/kg)</div>
+                    <div class="result-value" id="qpCorrectedValue">-</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">qp - Volumetric Heat of Combustion (MJ/L)</div>
+                    <div class="result-value" id="qpVolValue">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cetane Index Tab -->
+        <div id="cetane-tab" class="tab-content">
+            <div class="info">
+                <strong>Cetane Index:</strong> Calculate CCI (Calculated Cetane Index) for diesel fuels.
+            </div>
+
+            <form id="cetaneForm">
+                <div class="form-group">
+                    <label for="cetaneProcedure">Select Procedure</label>
+                    <select id="cetaneProcedure">
+                        <option value="A">Procedure A (Equation 1 - °C)</option>
+                        <option value="B">Procedure B (Equation 3 - °F)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="densityCetane">D - Density at 15°C (g/mL)</label>
+                    <input type="number" id="densityCetane" step="0.0001" required>
+                    <small>Test Methods D1298 or D4052</small>
+                </div>
+
+                <!-- Procedure A Fields (°C) -->
+                <div id="procedureAFields">
+                    <div class="form-group">
+                        <label for="T10C">T₁₀ - 10% Recovery Temperature (°C)</label>
+                        <input type="number" id="T10C" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="T50C">T₅₀ - 50% Recovery Temperature (°C)</label>
+                        <input type="number" id="T50C" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="T90C">T₉₀ - 90% Recovery Temperature (°C)</label>
+                        <input type="number" id="T90C" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+                </div>
+
+                <!-- Procedure B Fields (°F) -->
+                <div id="procedureBFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="T10F">T₁₀ - 10% Recovery Temperature (°F)</label>
+                        <input type="number" id="T10F" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="T50F">T₅₀ - 50% Recovery Temperature (°F)</label>
+                        <input type="number" id="T50F" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="T90F">T₉₀ - 90% Recovery Temperature (°F)</label>
+                        <input type="number" id="T90F" step="0.1">
+                        <small>Test Method D86, corrected to standard barometric pressure</small>
+                    </div>
+                </div>
+
+                <button type="submit">Calculate Cetane Index</button>
+            </form>
+
+            <div class="results" id="cetaneResults">
+                <div class="result-item">
+                    <div class="result-label">CCI - Calculated Cetane Index</div>
+                    <div class="result-value" id="cciValue">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="./main.js"></script>
+</body>
+</html>
